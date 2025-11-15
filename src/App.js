@@ -9,6 +9,7 @@ import PenjualanForm from "./components/penjualan/PenjualanForm";
 import ItemPenjualanList from "./components/itemPenjualan/ItemPenjualanList";
 import ItemPenjualanAdd from "./components/itemPenjualan/ItemPenjualanAdd";
 import ItemPenjualanEdit from "./components/itemPenjualan/ItemPenjualanEdit";
+import ItemPenjualanForm from "./components/itemPenjualan/ItemPenjualanForm";
 
 function App() {
   return (
@@ -31,11 +32,18 @@ function App() {
         <Route path="/penjualan/edit/:id" element={<PenjualanForm />} />
 
         {/*Item Penjualan */}
-        <Route path="/itemPenjualan" element={<ItemPenjualanList />} />
-        <Route path="/itemPenjualan/tambah" element={<ItemPenjualanAdd />} />
+
+        <Route
+          path="/item-penjualan/tambah/:nota"
+          element={<ItemPenjualanForm />}
+        />
         <Route
           path="/item-penjualan/edit/:id"
-          element={<ItemPenjualanEdit />}
+          element={<ItemPenjualanForm />}
+        />
+        <Route
+          path="/item-penjualan/list/:nota"
+          element={<ItemPenjualanList />}
         />
       </Routes>
     </Router>

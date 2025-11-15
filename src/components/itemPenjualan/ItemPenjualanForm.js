@@ -1,84 +1,80 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api";
+import { useNavigate, useParams } from "react-router-dom";
 
-function ItemPenjualanForm() {
-  const [nota, setNota] = useState("");
-  const [kodeBarang, setKodeBarang] = useState("");
-  const [qty, setQty] = useState("");
-  const [notaList, setNotaList] = useState([]);
-  const [barangList, setBarangList] = useState([]);
+export default function ItemPenjualanForm() {
+  const { id, nota } = useParams(); // ← gunakan 'nota' sesuai route
   const navigate = useNavigate();
-  const { id } = useParams();
+
+  const [notaState, setNotaState] = useState(nota || "");
+  const [kodeBarang, setKodeBarang] = useState("");
+  const [qty, setQty] = useState(1);
+  const [barangList, setBarangList] = useState([]);
 
   useEffect(() => {
-    // Ambil daftar nota dari tabel penjualan
-    api.get("/penjualan").then((res) => setNotaList(res.data));
+    api.get("/barang").then((r) => setBarangList(r.data));
 
-    // Ambil daftar barang
-    api.get("/barang").then((res) => setBarangList(res.data));
-  }, []);
-
-  useEffect(() => {
     if (id) {
-      api.get(`/item-penjualan/${id}`).then((res) => {
-        setNota(res.data.nota);
-        setKodeBarang(res.data.kode_barang);
-        setQty(res.data.qty);
+      api.get(`/item-penjualan/${id}`).then((r) => {
+        setNotaState(r.data.nota);
+        setKodeBarang(r.data.kode_barang);
+        setQty(r.data.qty);
       });
     }
   }, [id]);
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-
-    const data = { nota, kode_barang: kodeBarang, qty };
 
     try {
       if (id) {
-        await api.put(`/item-penjualan/${id}`, data);
+        await api.put(`/item-penjualan/${id}`, {
+          kode_barang: kodeBarang,
+          qty,
+        });
       } else {
-        await api.post("/item-penjualan", data);
+        await api.post("/item-penjualan", {
+          nota: notaState,
+          kode_barang: kodeBarang,
+          qty,
+        });
       }
-      navigate("/item-penjualan");
-    } catch (error) {
-      console.error("Gagal menyimpan data:", error);
+
+      navigate(`/item-penjualan/list/${notaState}`);
+    } catch (e) {
+      console.error(e);
+      alert("Gagal");
     }
   };
 
   return (
     <div className="container mt-4">
-      <h2>{id ? "Edit Item Penjualan" : "Tambah Item Penjualan"}</h2>
-      <form onSubmit={handleSubmit}>
+      <h2>{id ? "Edit Item" : "Tambah Item"}</h2>
+
+      <form onSubmit={submit}>
         <div className="mb-3">
           <label>Nota</label>
-          <select
-            className="form-select"
-            value={nota}
-            onChange={(e) => setNota(e.target.value)}
+          <input
+            className="form-control"
+            value={notaState}
+            onChange={(e) => setNotaState(e.target.value)}
             required
-          >
-            <option value="">-- Pilih Nota --</option>
-            {notaList.map((n) => (
-              <option key={n.id_nota} value={n.id_nota}>
-                {n.id_nota}
-              </option>
-            ))}
-          </select>
+            disabled={!!id || !!nota} // sudah benar
+          />
         </div>
 
         <div className="mb-3">
-          <label>Kode Barang</label>
+          <label>Barang</label>
           <select
             className="form-select"
             value={kodeBarang}
             onChange={(e) => setKodeBarang(e.target.value)}
             required
           >
-            <option value="">-- Pilih Barang --</option>
+            <option value="">--Pilih Barang--</option>
             {barangList.map((b) => (
               <option key={b.kode_barang} value={b.kode_barang}>
-                {b.nama_barang} ({b.kode_barang})
+                {b.nama_barang} ({b.kode_barang}) - {b.harga}
               </option>
             ))}
           </select>
@@ -90,18 +86,16 @@ function ItemPenjualanForm() {
             type="number"
             className="form-control"
             value={qty}
-            onChange={(e) => setQty(e.target.value)}
             min="1"
+            onChange={(e) => setQty(e.target.value)}
             required
           />
         </div>
 
-        <button type="submit" className="btn btn-success">
+        <button className="btn btn-success" type="submit">
           Simpan
         </button>
       </form>
     </div>
   );
 }
-
-export default ItemPenjualanForm;
